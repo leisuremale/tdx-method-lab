@@ -1,0 +1,18 @@
+[project]
+name = "tdx-lab"
+version = "0.1.0"
+description = "通达信三指标体系回测验证"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.2.0",
+    "numpy>=1.26.0",
+    "requests>=2.31.0",
+    "baostock>=0.8.8",
+]
+
+[build-system]
+requires = ["hatchling>=1.24.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tdx_lab"]
