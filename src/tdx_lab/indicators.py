@@ -130,11 +130,12 @@ def compute_xhmain(df: pd.DataFrame) -> dict[str, np.ndarray]:
 
     # ── CXHZB: 加权均价趋势线 ──
     da = (3 * c + o + l + h) / 6
-    w = np.array([20, 19, 18, 17, 16, 15, 14, 13, 12, 11,
-                  10, 9, 8, 7, 6, 5, 4, 3, 2, 1], dtype=float)
+    # 审计m2修复：原式 20*DA(今日)+19*REF(DA,1)+... —— 最近日权重最大；
+    # valid_da 为时间升序（今日在末位），故权重须升序对齐 [1..20]
+    w = np.arange(1, 21, dtype=float)
     cxhzb = np.full(n, np.nan)
     for i in range(19, n):
-        valid_w = w[: min(20, i + 1)]
+        valid_w = w[-min(20, i + 1):]
         valid_da = da[i - len(valid_w) + 1 : i + 1]
         cxhzb[i] = np.average(valid_da, weights=valid_w)
 

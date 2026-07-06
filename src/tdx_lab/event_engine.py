@@ -61,11 +61,15 @@ def simulate_events(open_, high, low, close, entry_signal, exit_signal, *,
     trades = []
     blocked = 0
 
+    # 审计C1修复：缓存是前复权价，"×(1+limit)后四舍五入到分"在复权价上失效
+    # （取整点漂移导致一字板漏检≈随机半数）。改比例判定+0.2%容差。
+    EPS = 0.002
+
     def limit_up_open(i):
-        return o[i] >= round(c[i - 1] * (1 + limit), 2)
+        return c[i - 1] > 0 and o[i] / c[i - 1] >= 1 + limit - EPS
 
     def limit_down_open(i):
-        return o[i] <= round(c[i - 1] * (1 - limit), 2)
+        return c[i - 1] > 0 and o[i] / c[i - 1] <= 1 - limit + EPS
 
     pending_entry = False
     for i in range(1, n):

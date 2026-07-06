@@ -109,9 +109,17 @@ def worker_init():
         all_dates.update(dates.tolist())
         mkt = {k: v.reindex(pd.DatetimeIndex(df["date"])).fillna(False).values
                for k, v in idx_filters.items()}
+
+        # 审计M1/m6：ST 期(滚动40日最大日涨跌幅≤5.5%=5%限价特征)与退市前120日 禁止入场
+        pct = np.abs(np.diff(c) / c[:-1])
+        max40 = pd.Series(np.concatenate([[np.nan], pct])).rolling(40).max().values
+        entry_ok = ~(max40 <= 0.055)
+        if dates[-1] < np.datetime64("2026-06-01"):   # 已退市/停更
+            entry_ok[max(0, n - 120):] = False
         stocks.append({"code": f.stem.split(".")[1], "dates": dates,
                        "o": df["open"].values, "h": h, "l": l, "c": c,
-                       "events": events, "confirms": confirms, "exits": exits, "mkt": mkt})
+                       "events": events, "confirms": confirms, "exits": exits,
+                       "mkt": mkt, "entry_ok": entry_ok})
 
     master = np.array(sorted(all_dates), dtype="datetime64[D]")
     for s in stocks:
@@ -143,6 +151,7 @@ def eval_combo(combo):
     event, confirm, exit_name, min_hold, filt = combo
     pos_list, eq_list = [], []
     n_trades = wins = 0
+    week_returns: dict = {}   # 审计M4：按入场周聚类的收益，算 t 统计量
     for s in _G["stocks"]:
         entry = s["events"][event]
         if confirm != "none":
@@ -150,6 +159,7 @@ def eval_combo(combo):
             entry = entry_from_event_confirm(entry, s["confirms"][cname], int(w))
         if filt != "none":
             entry = entry & s["mkt"][filt]
+        entry = entry & s["entry_ok"]
         exit_arr = s["exits"]["_zeros"] if exit_name.startswith(("hold", "giveback")) \
             else s["exits"][exit_name]
         max_hold = int(exit_name[4:]) if exit_name.startswith("hold") else None
@@ -165,6 +175,8 @@ def eval_combo(combo):
             if t["exit_idx"] < disc_last:
                 n_trades += 1
                 wins += t["return_pct"] > 0
+                wk = str(s["dates"][t["entry_idx"]].astype("datetime64[W]"))
+                week_returns.setdefault(wk, []).append(t["return_pct"])
 
     port = portfolio_from_curves(pos_list, eq_list)
     disc = port[_G["disc_mask"]]
@@ -178,8 +190,14 @@ def eval_combo(combo):
     for y in np.unique(yrs):
         seg = disc[yrs == y]
         by_year[int(y)] = round(float(seg[-1] / seg[0] - 1) * 100, 1)
+    # 按周聚类 t：周均值序列的 t 统计量（审计M4：主排序判据，Calmar 只展示）
+    cluster_means = np.array([np.mean(v) for v in week_returns.values()])
+    k = len(cluster_means)
+    t_stat = (float(cluster_means.mean() / (cluster_means.std(ddof=1) / np.sqrt(k)))
+              if k >= 8 and cluster_means.std(ddof=1) > 0 else 0.0)
     return {"event": event, "confirm": confirm, "exit": exit_name,
             "min_hold": min_hold, "filter": filt, "n_trades": n_trades,
+            "n_weeks": k, "t_stat": round(t_stat, 2),
             "win_rate": round(wins / n_trades * 100, 1) if n_trades else 0.0,
             "cagr": round(float(cagr) * 100, 2), "maxdd": round(maxdd * 100, 2),
             "calmar": round(float(calmar), 3), "by_year": json.dumps(by_year)}
