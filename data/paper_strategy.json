@@ -10,5 +10,13 @@
   "min_hold": 0,
   "exit": "fixed_hold",
   "exit_confirm_days": 1,
-  "cooldown": 5
+  "cooldown": 5,
+  "account": {
+    "capital": 40000.0,
+    "slots": 5,
+    "seat_cap": 0.2,
+    "rule": "lexico",
+    "cost_side": 0.0013,
+    "note": "P1定稿: 5席/20%上限(MaxDD -34%→-27%优于3席/30%); 席位选择规则经500种子随机对照全部无信息, 字典序=可复现无暗箱"
+  }
 }

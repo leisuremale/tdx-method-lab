@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """纸面交易线：每日收盘后扫描 TDX 信号，维护纸面持仓与日志，飞书【纸面】汇总。
 
-策略参数化（data/paper_strategy.json）——统一证伪关出 V-final 后改配置即切换。
-默认 V2：tianma25 观察 → 15日内 close>MA20 确认入场；min_hold 20 日；
-退出=观变止盈或趋势转弱(连续2日确认)。成交价=信号次日开盘（由次日运行回填）。
-不动真钱；消息前缀【纸面】。
+两层并行（P2 运营层，2026-07-06）：
+1. 信号层（无席位限制）：每个信号都记纸面持仓——验证 edge 本身，供 ≥20 平仓事件门槛。
+2. 账户层（虚拟 4万/5席/20%单席上限）：镜像真实试验仓结构，同日多信号按字典序
+   （P1 已证选择规则无信息，字典序=可复现无暗箱）；飞书给出可执行委托参数。
+成交价=信号次日开盘（由次日运行回填）。不动真钱；消息前缀【纸面】。
 """
 from __future__ import annotations
 
@@ -33,6 +34,8 @@ STRATEGY_PATH = LAB / "data" / "paper_strategy.json"
 DEFAULT_STRATEGY = {"name": "Vfinal-tm21x15-hold30", "kdj_n": 21, "threshold": 15,
                     "confirm": "none", "window": 0, "hold_bars": 30,
                     "exit": "fixed_hold", "exit_confirm_days": 1, "cooldown": 5}
+DEFAULT_ACCOUNT = {"capital": 40000.0, "slots": 5, "seat_cap": 0.20,
+                   "rule": "lexico", "cost_side": 0.0013}
 
 
 def tradable_pool() -> list:
@@ -83,18 +86,106 @@ def append_log(rows: list) -> None:
         w.writerows(rows)
 
 
+def account_layer(state, strategy, acct_cfg, quotes, signals_today, log_rows, msg_lines):
+    """虚拟账户层：4万/5席/20%上限，字典序选席（P1 证明选择规则无信息）。"""
+    acct = state.setdefault("acct", {"cash": acct_cfg["capital"], "positions": {},
+                                     "pending_buys": {}, "pending_sells": {}})
+    cost = acct_cfg["cost_side"]
+    sname = strategy["name"]
+
+    def log(action, code, price, detail):
+        q = quotes[code]
+        log_rows.append({"date": q["date"], "code": code, "name": q["name"],
+                         "action": action, "price": price, "detail": detail,
+                         "strategy": sname})
+
+    # 1) 回填昨日委托（今日开盘成交）
+    for code in list(acct["pending_buys"]):
+        q = quotes.get(code)
+        if not q:
+            continue
+        order = acct["pending_buys"].pop(code)
+        shares = order["shares"]
+        if shares * q["open"] * (1 + cost) > acct["cash"]:
+            shares = int(acct["cash"] / (q["open"] * (1 + cost) * 100)) * 100
+        if shares <= 0:
+            msg_lines.append(f"- ⚠️【账户】{q['name']} `{code}` 现金不足，撤单")
+            continue
+        acct["cash"] -= shares * q["open"] * (1 + cost)
+        acct["positions"][code] = {"shares": shares, "entry_price": q["open"],
+                                   "entry_date": q["date"], "name": q["name"]}
+        log("ACCT_BUY_FILL", code, q["open"], f"{shares}股")
+        msg_lines.append(f"- 📥【账户】买入成交 {q['name']} `{code}` {shares}股 @ {q['open']}")
+    for code in list(acct["pending_sells"]):
+        q, pos = quotes.get(code), acct["positions"].get(code)
+        if not pos:
+            acct["pending_sells"].pop(code)
+            continue
+        if not q:
+            continue
+        acct["pending_sells"].pop(code)
+        acct["positions"].pop(code)
+        acct["cash"] += pos["shares"] * q["open"] * (1 - cost)
+        ret = (q["open"] / pos["entry_price"] - 1) * 100 - cost * 2 * 100
+        log("ACCT_SELL_FILL", code, q["open"],
+            f"{pos['shares']}股 {ret:+.2f}% (自{pos['entry_date']})")
+        msg_lines.append(f"- 📤【账户】卖出成交 {q['name']} `{code}` "
+                         f"{pos['shares']}股 @ {q['open']} ({ret:+.2f}%)")
+
+    # 2) 到期退出排程（固定持有 N 根K线）
+    for code, pos in acct["positions"].items():
+        q = quotes.get(code)
+        if not q or code in acct["pending_sells"]:
+            continue
+        bars_held = sum(1 for d in q["dates"] if d > pos["entry_date"])
+        if bars_held >= strategy["hold_bars"]:
+            acct["pending_sells"][code] = q["date"]
+            msg_lines.append(f"- 🔔【账户】到期卖出委托 {pos['name']} `{code}` "
+                             f"{pos['shares']}股（持有{bars_held}根，明日开盘卖出）")
+
+    # 3) 新入场（字典序，席位与现金双约束）
+    busy = set(acct["positions"]) | set(acct["pending_buys"])
+    free = acct_cfg["slots"] - len(busy)
+    equity = acct["cash"] + sum(p["shares"] * quotes[c]["close"]
+                                for c, p in acct["positions"].items() if c in quotes)
+    avail = acct["cash"] - sum(o["est_cost"] for o in acct["pending_buys"].values())
+    for code in sorted(c for c in signals_today if c not in busy)[:max(free, 0)]:
+        q = quotes[code]
+        budget = min(acct_cfg["seat_cap"] * equity, avail)
+        shares = int(budget / (q["close"] * (1 + cost) * 100)) * 100
+        if shares <= 0:
+            msg_lines.append(f"- ⚠️【账户】{q['name']} `{code}` 单价过高或资金不足，放弃")
+            continue
+        est = shares * q["close"] * (1 + cost)
+        acct["pending_buys"][code] = {"shares": shares, "est_cost": est, "date": q["date"]}
+        avail -= est
+        log("ACCT_ORDER", code, q["close"], f"明日开盘买{shares}股")
+        msg_lines.append(f"- ✳️【账户】明日开盘委托买入 {q['name']} `{code}` "
+                         f"{shares}股（约¥{est:,.0f}，参考今收 {q['close']}）")
+
+    # 4) 快照
+    if acct["positions"] or acct["pending_buys"] or acct["pending_sells"]:
+        msg_lines.append(f"- 💼【账户】权益 ¥{equity:,.0f}｜现金 ¥{acct['cash']:,.0f}｜"
+                         f"持仓 {len(acct['positions'])}/{acct_cfg['slots']}席")
+
+
 def main() -> int:
     strategy = load_json(STRATEGY_PATH, DEFAULT_STRATEGY)
+    acct_cfg = strategy.get("account", DEFAULT_ACCOUNT)
     state = load_json(STATE_PATH, {"positions": {}, "pending_buys": {}, "pending_sells": {},
                                    "exit_streak": {}, "cooldown": {}})
     today = datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d")
     log_rows, msg_lines = [], []
+    quotes, signals_today = {}, []
 
     for code, name in tradable_pool():
         df = fetch_daily(code)
         if df is None or df["date"].iloc[-1] < "2026-06-25":
             continue
         last_date = df["date"].iloc[-1]
+        quotes[code] = {"name": name, "date": last_date, "open": float(df["open"].iloc[-1]),
+                        "close": float(df["close"].iloc[-1]),
+                        "dates": df["date"].tolist()}
         sub = compute_xhsub(df)
         main_ = compute_xhmain(df)
         c = df["close"].values
@@ -158,6 +249,7 @@ def main() -> int:
             entry = entry_from_event_confirm(event, c > ma20, strategy["window"])
         if entry[-1]:
             state["pending_buys"][code] = last_date
+            signals_today.append(code)
             log_rows.append({"date": last_date, "code": code, "name": name, "action": "SIGNAL",
                              "price": c[-1], "detail": "观察+MA20确认，明日开盘买入",
                              "strategy": strategy["name"]})
@@ -166,6 +258,8 @@ def main() -> int:
             log_rows.append({"date": last_date, "code": code, "name": name, "action": "OBSERVE",
                              "price": c[-1], "detail": "天马观察事件，待MA20确认",
                              "strategy": strategy["name"]})
+
+    account_layer(state, strategy, acct_cfg, quotes, signals_today, log_rows, msg_lines)
 
     STATE_PATH.parent.mkdir(exist_ok=True)
     STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
