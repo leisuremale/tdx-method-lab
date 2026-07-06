@@ -1,0 +1,14 @@
+﻿event,confirm,exit,min_hold,filter,label,hold_calmar,hold_t,hold_trades
+tm21_15,none,guanbian_dn,30,none,mh30+guanbian_dn,2.034,1.71,568
+tm21_15,none,trend_dn,30,none,mh30+trend_dn,1.904,0.0,0
+tm21_15,none,muma_off,30,none,mh30+muma_off,1.983,2.06,571
+tm21_15,none,caopan_off,30,none,mh30+caopan_off,1.932,1.77,569
+tm21_15,none,v1_tp_or_td,30,none,mh30+v1_tp_or_td,2.004,1.71,568
+tm21_15,none,guanbian_dn,40,none,mh40+guanbian_dn,1.274,2.39,548
+tm21_15,none,trend_dn,40,none,mh40+trend_dn,1.904,0.0,0
+tm21_15,none,muma_off,40,none,mh40+muma_off,1.336,2.34,552
+tm21_15,none,caopan_off,40,none,mh40+caopan_off,1.415,2.32,551
+tm21_15,none,v1_tp_or_td,40,none,mh40+v1_tp_or_td,1.281,2.39,548
+tm21_15,none,hold30,0,none,固定hold30,2.105,2.11,571
+tm21_15,none,hold40,0,none,固定hold40,1.658,2.52,553
+tm21_15,none,hold50,0,none,固定hold50,1.077,2.81,513
