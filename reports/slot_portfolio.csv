@@ -1,0 +1,5 @@
+﻿rule,hold_cagr,hold_maxdd,hold_calmar,full_cagr,full_maxdd,full_calmar,trades,occupancy,pctile_vs_random
+deep_oversold,28.06,-34.64,0.81,13.66,-35.6,0.384,118,2.75,48.4
+turnover,18.32,-38.02,0.482,-2.95,-47.06,-0.063,118,2.75,12.8
+lexico,18.6,-37.42,0.497,11.45,-37.42,0.306,118,2.75,14.4
+random_median(seed104),26.13,-31.41,0.832,5.12,-38.47,0.133,118,2.75,50.0

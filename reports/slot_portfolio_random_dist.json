@@ -1,0 +1,10 @@
+{
+  "rand_hold_calmar_med": 0.8314999999999999,
+  "rand_hold_calmar_p5": 0.34295000000000003,
+  "rand_hold_calmar_p95": 1.54015,
+  "rand_full_calmar_med": 0.2325,
+  "rand_hold_cagr_med": 27.52,
+  "rand_hold_maxdd_med": -33.87,
+  "rand_trades_med": 118.0,
+  "rand_occupancy_med": 2.7483095416979713
+}
