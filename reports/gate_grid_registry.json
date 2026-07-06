@@ -1,0 +1,39 @@
+{
+  "events": [
+    "tianma20",
+    "tianma25",
+    "trend_up",
+    "var11",
+    "strong_rev",
+    "caopan_x"
+  ],
+  "confirms": [
+    "none",
+    "ma20_w10",
+    "ma20_w15",
+    "muma_w10",
+    "trendst_w10"
+  ],
+  "exits": [
+    "guanbian_dn",
+    "trend_dn",
+    "v1_tp_or_td",
+    "water_slope",
+    "nday_low10",
+    "hold20",
+    "zhz_break"
+  ],
+  "min_holds": [
+    0,
+    20
+  ],
+  "filters": [
+    "none",
+    "mkt_ma60"
+  ],
+  "discovery_end": "2024-12-31",
+  "cost": 0.0013,
+  "confirm_days": 2,
+  "cooldown": 5,
+  "execution": "T+1 next open; limit-up blocks entry; limit-down defers exit"
+}
