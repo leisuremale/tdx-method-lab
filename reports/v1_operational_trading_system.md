@@ -1,6 +1,6 @@
-# Operational Trading System V1
+# Operational Trading System V2
 
-Generated: 2026-07-06 08:54:32 +0800
+Generated: 2026-07-06 09:19:30 +0800
 
 Objective: find a practical trading system, not a pretty backtest.
 
@@ -11,10 +11,11 @@ Verdict: candidate system only. It is usable for watchlist and manual confirmati
 Core rule:
 
 1. Trade only validated segments.
-2. Entry is low KDJ restart: AZ3 crosses above AZ4 while AZ3 < 25.
-3. Minimum hold: 20 trading days.
-4. Exit uses the segment policy selected from rolling-window tests.
-5. All orders require manual confirmation.
+2. Observation is low KDJ restart: AZ3 crosses above AZ4 while AZ3 < 25.
+3. Entry requires close > MA20 within 15 trading days after the observation.
+4. Minimum hold: 20 trading days.
+5. Exit uses the segment policy selected from rolling-window tests.
+6. All orders require manual confirmation.
 
 ## Validated Segment Policies
 
@@ -32,14 +33,12 @@ Core rule:
 
 | samples | trades | win | positive | beatBH | median_return | median_dd | median_calmar | median_vsBH |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 138 | 240 | 78.33% | 122 | 53 | 22.81% | -17.11% | 1.66 | -18.09% |
+| 138 | 229 | 72.93% | 110 | 49 | 20.99% | -17.17% | 1.31 | -21.45% |
 
 ## Current Action List
 
 | action | code | name | segment | policy | date | close | reason | state | basket_down |
 |---|---|---|---|---|---:|---:|---|---|---:|
-| entry_candidate | 002230 | 科大讯飞 | 大模型/AI应用/AIGC | base_combo | 2026-07-03 | 41.51 | low_kdj_25_entry | 持股 | 0 |
-| entry_candidate | 601360 | 三六零 | 大模型/AI应用/AIGC | base_combo | 2026-07-03 | 8.71 | low_kdj_25_entry | 持股 | 0 |
 | exit_condition | 300757 | 罗博特科 | CPO | bull_delay_ma20 | 2026-07-03 | 512.73 | bull_delay_ma20_exit_condition | 止盈 | 0 |
 | exit_condition | 300624 | 万兴科技 | 大模型/AI应用/AIGC | base_combo | 2026-07-03 | 50.61 | base_combo_exit_condition | 止盈 | 0 |
 | exit_condition | 002837 | 英维克 | 液冷/散热 | bull_no_sell_until_ma20 | 2026-07-03 | 71.43 | bull_no_sell_until_ma20_exit_condition | 止盈 | 0 |
@@ -58,7 +57,9 @@ Core rule:
 | watch | 002185 | 华天科技 | 先进封装/封测 | adaptive_shou_no_down | 2026-07-03 | 19.51 | validated_segment | 止盈 | 0 |
 | watch | 600584 | 长电科技 | 先进封装/封测 | adaptive_shou_no_down | 2026-07-03 | 90.88 | validated_segment | 止盈 | 0 |
 | watch | 603005 | 晶方科技 | 先进封装/封测 | adaptive_shou_no_down | 2026-07-03 | 43.38 | validated_segment | 止盈 | 0 |
+| watch | 002230 | 科大讯飞 | 大模型/AI应用/AIGC | base_combo | 2026-07-03 | 41.51 | validated_segment | 持股 | 0 |
 | watch | 300418 | 昆仑万维 | 大模型/AI应用/AIGC | base_combo | 2026-07-03 | 42.66 | validated_segment | 持股 | 0 |
+| watch | 601360 | 三六零 | 大模型/AI应用/AIGC | base_combo | 2026-07-03 | 8.71 | validated_segment | 持股 | 0 |
 | watch | 002272 | 川润股份 | 液冷/散热 | bull_no_sell_until_ma20 | 2026-07-03 | 23.26 | validated_segment | 止盈 | 0 |
 | watch | 301018 | 申菱环境 | 液冷/散热 | bull_no_sell_until_ma20 | 2026-07-03 | 117.78 | validated_segment | 持股 | 0 |
 | ignore | 002405 | 四维图新 | AIPC/端侧AI |  | 2026-07-03 | 6.56 | segment_blocked_or_unvalidated | 持股 | 0 |
@@ -102,7 +103,7 @@ Core rule:
 
 ## Blocked Segments
 
-Do not trade V1 mechanically in these segments until a separate edge is found:
+Do not trade V2 mechanically in these segments until a separate edge is found:
 
 - AI服务器
 - PCB
