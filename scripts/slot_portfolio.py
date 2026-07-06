@@ -34,8 +34,11 @@ RANDOM_SEEDS = 500
 HOLDOUT = np.datetime64("2025-01-01")
 
 
-def build_event_table():
-    """每股跑一遍 V-final 引擎，汇成全局事件表（含排序特征）。"""
+def build_event_table(entry_masks=None):
+    """每股跑一遍 V-final 引擎，汇成全局事件表（含排序特征）。
+
+    entry_masks: 可选的每股附加入场掩码（如基本面池成员）——与基线信号取与。
+    """
     stocks = GS._G["stocks"]
     all_dates = set()
     for s in stocks:
@@ -45,6 +48,8 @@ def build_event_table():
     events = []
     for si, s in enumerate(stocks):
         entry = s["events"]["tm21_15"] & s["entry_ok"]
+        if entry_masks is not None:
+            entry = entry & entry_masks[si]
         r = simulate_events(s["o"], s["h"], s["l"], s["c"], entry,
                             s["exits"]["_zeros"], code=s["code"], cost=COST_SIDE,
                             min_hold=0, max_hold=30, confirm_days=GS.CONFIRM_DAYS,

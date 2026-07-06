@@ -1,0 +1,5 @@
+﻿pool,hold_calmar,hold_t,full_calmar,trades,hold_trades,avg_pool_size,perm_hold_p95,perm_full_p95,hold_pctile,full_pctile,acct_full_calmar_med,acct_full_calmar_p5,acct_full_calmar_p95
+none,2.105,2.11,0.622,2613,571,,,,,,,,
+P25,2.647,2.26,0.853,642,153,100.0,3.242,0.844,87.0,95.5,0.331,0.211,0.465
+P50,2.099,2.65,0.699,1268,290,200.0,,,,,,,
+POS,2.111,2.69,0.638,1421,300,214.0,,,,,,,
