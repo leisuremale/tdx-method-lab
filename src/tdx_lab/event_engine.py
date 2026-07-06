@@ -34,7 +34,8 @@ def entry_from_event_confirm(event: np.ndarray, confirm: np.ndarray,
 def simulate_events(open_, high, low, close, entry_signal, exit_signal, *,
                     code: str, cost: float = 0.0013, min_hold: int = 0,
                     max_hold: int | None = None, confirm_days: int = 1,
-                    cooldown: int = 5) -> dict:
+                    cooldown: int = 5,
+                    giveback: tuple | None = None) -> dict:
     """单股事件回测（证伪关口径）。
 
     - entry_signal[t]=True 且空仓且冷却结束 → 于 t+1 开盘买入（开盘涨停则拒买）
@@ -53,6 +54,7 @@ def simulate_events(open_, high, low, close, entry_signal, exit_signal, *,
     eq = 1.0
     entry_idx = -1
     entry_price = 0.0
+    peak_close = 0.0
     cooldown_left = 0
     exit_streak = 0
     pending_exit = False
@@ -79,6 +81,7 @@ def simulate_events(open_, high, low, close, entry_signal, exit_signal, *,
                 entry_idx = i
                 exit_streak = 0
                 pending_exit = False
+                peak_close = entry_price
         elif pending_exit and holding:
             if not limit_down_open(i):
                 exit_price = o[i]
@@ -101,7 +104,15 @@ def simulate_events(open_, high, low, close, entry_signal, exit_signal, *,
             else:
                 exit_streak = 0
             hold_days = i - entry_idx
-            if (exit_streak >= confirm_days and hold_days >= min_hold) or \
+            gb_hit = False
+            if giveback is not None:
+                peak_close = max(peak_close, c[i])
+                activate, retain = giveback
+                peak_gain = peak_close / entry_price - 1
+                if peak_gain >= activate and \
+                   c[i] <= entry_price * (1 + peak_gain * retain):
+                    gb_hit = True  # 利润守护：不受 min_hold 约束
+            if gb_hit or (exit_streak >= confirm_days and hold_days >= min_hold) or \
                (max_hold is not None and hold_days >= max_hold):
                 pending_exit = True
         elif not holding:

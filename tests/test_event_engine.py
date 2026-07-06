@@ -74,6 +74,20 @@ def test_confirm_window_entry():
     assert entry2.sum() == 0
 
 
+def test_giveback_exit_protects_profit():
+    # 入场后涨到 +40%（激活+30%）→ 跌破守半线(entry×1.2) → 次日开盘出
+    n = 40
+    c = np.concatenate([np.full(5, 100.0), np.linspace(100, 140, 20), np.linspace(140, 115, 15)])
+    o = np.concatenate([[c[0]], c[:-1]])
+    h = c + 0.5; l = c - 0.5
+    entry = np.zeros(n, bool); entry[4] = True
+    r = simulate_events(o, h, l, c, entry, np.zeros(n, bool), code="000001",
+                        cost=0.0, giveback=(0.30, 0.5), min_hold=999)  # min_hold 不拦利润守护
+    assert len(r["trades"]) == 1
+    t = r["trades"][0]
+    assert t["exit_price"] >= 118  # 在守半线(≈120)附近出，而非跌到底 115
+
+
 def test_costs_applied_both_sides():
     o, h, l, c = flat(10)
     entry = np.zeros(10, bool); entry[2] = True
