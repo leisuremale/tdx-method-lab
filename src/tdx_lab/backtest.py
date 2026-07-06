@@ -34,7 +34,7 @@ def simulate(
         xhmain: compute_xhmain() 输出
         entry_rules: 入场规则集
             - "tian_ma_only": 只在天马日入场
-            - "tian_ma_and_trend": 天马 + 趋势转强（观变上升）
+            - "tian_ma_trend_state": 天马 + 主图趋势在强势区 + 观变上升
             - "tian_ma_or_trend": 天马 或 趋势转强
             - "tian_ma_or_var11": 天马 或 多空金叉
         exit_rules: 退出规则集
@@ -91,7 +91,7 @@ def simulate(
 
         if entry_rules == "tian_ma_only":
             return tm
-        elif entry_rules == "tian_ma_trend_state":
+        elif entry_rules in {"tian_ma_trend_state", "tian_ma_and_trend"}:
             # V2: 天马 + 主图趋势在强势区 + 观变上升
             return tm and trend_state and hold_now
         elif entry_rules == "tian_ma_or_trend":
@@ -102,7 +102,7 @@ def simulate(
             return tu and hold_now and zhz_improving
         elif entry_rules == "var11_only":
             return v11 and hold_now
-        return False
+        raise ValueError(f"unknown entry_rules: {entry_rules}")
 
     # ── 退出条件函数 ──
     def can_exit(i: int) -> bool:
@@ -123,7 +123,7 @@ def simulate(
             return zb
         elif exit_rules == "all":
             return tp or td or zb or ps
-        return False
+        raise ValueError(f"unknown exit_rules: {exit_rules}")
 
     # ── 模拟循环 ──
     equity = np.ones(n)
@@ -199,7 +199,12 @@ def simulate(
     peak = np.maximum.accumulate(eq)
     dd = (eq / peak - 1.0) * 100
     max_drawdown = float(np.min(dd))
-    calmar = total_return / abs(max_drawdown) if max_drawdown < 0 else float("inf")
+    if not trades:
+        calmar = 0.0
+    elif max_drawdown < 0:
+        calmar = total_return / abs(max_drawdown)
+    else:
+        calmar = float("inf")
 
     if trades:
         wins = sum(1 for t in trades if t["return_pct"] > 0)
@@ -292,4 +297,10 @@ def compare_rules(
         "calmar": bh["calmar"],
     })
 
-    return pd.DataFrame(results).sort_values("calmar", ascending=False)
+    out = pd.DataFrame(results)
+    out["_rank_active"] = (out["n_trades"] > 0).astype(int)
+    out = out.sort_values(
+        ["_rank_active", "calmar", "total_return"],
+        ascending=[False, False, False],
+    )
+    return out.drop(columns=["_rank_active"])

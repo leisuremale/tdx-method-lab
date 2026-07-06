@@ -54,11 +54,17 @@ def compute_xhsub(df: pd.DataFrame) -> dict[str, np.ndarray]:
     xhx = pd.Series(clz).ewm(span=9, adjust=False).mean().values
     zhz = 2 * (clz - xhx)  # MACD 柱体
 
-    # ── 观变 ──
+    # ── 观变 / 守仓 ──
     yscz = ema12 - ema26
     dqph = pd.Series(yscz).ewm(span=1, adjust=False).mean().values
     zqph = pd.Series(dqph).ewm(span=5, adjust=False).mean().values
     guan_bian = (dqph + zqph) / 2
+    cqph = pd.Series(yscz).ewm(span=20, adjust=False).mean().values
+    hold_line = np.zeros(n, dtype=bool)
+    shou_cang = np.zeros(n, dtype=bool)
+    for i in range(1, n):
+        hold_line[i] = guan_bian[i] >= guan_bian[i - 1]
+        shou_cang[i] = cqph[i] <= dqph[i - 1]
 
     # ── MACD 状态分类 ──
     macd_state = np.full(n, "", dtype=object)
@@ -95,6 +101,9 @@ def compute_xhsub(df: pd.DataFrame) -> dict[str, np.ndarray]:
     return {
         "zhz": zhz,
         "guan_bian": guan_bian,
+        "cqph": cqph,
+        "hold_line": hold_line,
+        "shou_cang": shou_cang,
         "tian_ma": tian_ma,
         "az3": az3,
         "az4": az4,
@@ -163,6 +172,12 @@ def compute_xhmain(df: pd.DataFrame) -> dict[str, np.ndarray]:
         above_ma10 = c[i] > ma10[i]                # 站上10日线
         strong_reversal[i] = prev_red and vol_expand and break_high and above_ma10
 
+    # ── 牧马 / 操盘线显示状态 ──
+    ema10 = pd.Series(c).ewm(span=10, adjust=False).mean().values
+    ema15 = pd.Series(c).ewm(span=15, adjust=False).mean().values
+    mu_ma = ema10 < c
+    cao_pan = (c >= ema15) & (ema10 > ema15) & (c > ema15)
+
     return {
         "cxhzb": cxhzb,
         "gzz": gzz,
@@ -170,6 +185,10 @@ def compute_xhmain(df: pd.DataFrame) -> dict[str, np.ndarray]:
         "trend_down": trend_down,
         "var11": var11,
         "strong_reversal": strong_reversal,
+        "ma10": ema10,
+        "ma15": ema15,
+        "mu_ma": mu_ma,
+        "cao_pan": cao_pan,
     }
 
 

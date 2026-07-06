@@ -137,6 +137,8 @@ def daily_state(df: pd.DataFrame, xhsub: dict, xhmain: dict) -> pd.DataFrame:
             "close": round(df["close"].iloc[i], 2),
             "tian_ma": int(xhsub["tian_ma"][i]),
             "hold": int(guan_bian[i] >= guan_bian[i - 1]),
+            "hold_line": int(xhsub.get("hold_line", np.zeros(n, dtype=bool))[i]),
+            "shou_cang": int(xhsub.get("shou_cang", np.zeros(n, dtype=bool))[i]),
             "take_profit": int(guan_bian[i] < guan_bian[i - 1]),
             "zhz": round(zhz[i], 2),
             "macd_state": macd_state[i],
@@ -150,5 +152,7 @@ def daily_state(df: pd.DataFrame, xhsub: dict, xhmain: dict) -> pd.DataFrame:
             "trend_down": int(xhmain["trend_down"][i]),
             "var11": int(xhmain["var11"][i]),
             "strong_reversal": int(xhmain["strong_reversal"][i]),
+            "mu_ma": int(xhmain.get("mu_ma", np.zeros(n, dtype=bool))[i]),
+            "cao_pan": int(xhmain.get("cao_pan", np.zeros(n, dtype=bool))[i]),
         })
     return pd.DataFrame(records)

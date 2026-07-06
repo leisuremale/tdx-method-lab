@@ -1,0 +1,2 @@
+strategy,stocks,stocks_with_trades,trades,weighted_win_rate,positive_stocks,beat_bh_stocks,median_return,median_drawdown,median_calmar,median_vs_bh
+segment_policy_v1,138,132,240,78.33,122,53,22.81,-17.11,1.66,-18.09

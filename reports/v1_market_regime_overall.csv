@@ -1,0 +1,9 @@
+strategy,stocks,stocks_with_trades,trades,weighted_win_rate,positive_stocks,beat_bh_stocks,median_return,median_drawdown,median_calmar,median_vs_bh
+base_combo,366,348,714,64.71,254,116,11.29,-17.09,0.7,-34.15
+bull_delay_ma20,366,342,685,62.19,254,119,12.0,-18.34,0.69,-28.88
+bull_delay_ma55,366,335,652,59.51,258,125,13.3,-20.03,0.63,-22.91
+bull_no_sell_until_ma20,366,342,702,62.54,251,115,10.68,-18.34,0.61,-29.69
+no_new_entries_in_down,366,306,532,62.03,204,92,3.71,-15.62,0.17,-39.74
+adaptive_shou_no_down,366,303,525,60.57,208,95,2.85,-16.63,0.08,-37.31
+adaptive_ma20_no_down,366,299,503,59.05,202,97,3.03,-16.91,0.06,-37.88
+adaptive_ma55_no_down,366,291,475,53.68,199,100,3.08,-18.12,0.0,-36.72

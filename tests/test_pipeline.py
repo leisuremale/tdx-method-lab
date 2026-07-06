@@ -79,7 +79,7 @@ def test_synth_indicators():
         print(f"  信号类型分布: {sig_df['signal_name'].value_counts().to_dict()}")
 
     # 回测
-    r = simulate(df, sub, main, entry_rules="tian_ma_and_trend", exit_rules="take_profit_or_trend_down")
+    r = simulate(df, sub, main, entry_rules="tian_ma_trend_state", exit_rules="take_profit_or_trend_down")
     print(f"  回测: {r['n_trades']} 笔交易 | 收益 {r['total_return']}% | 回撤 {r['max_drawdown']}% | Calmar {r['calmar']}")
 
     return all_ok
@@ -138,15 +138,15 @@ def test_real_data():
         print(f"  最新: {'持股' if last['hold'] else '止盈'} | ZHZ: {last['zhz']} | MACD: {last['macd_state']} | CXHZB: {'≥GZZ' if last['cxhzb_above_gzz'] else '<GZZ'}")
 
         # 规则对比
-        entry_rules = ["tian_ma_only", "tian_ma_and_trend", "tian_ma_or_trend", "tian_ma_or_var11"]
+        entry_rules = ["tian_ma_only", "tian_ma_trend_state", "tian_ma_or_trend", "tian_ma_or_var11"]
         exit_rules = ["take_profit_or_trend_down", "take_profit_only", "all"]
 
         print(f"\n  规则对比 (按 Calmar 排序):")
         cmp = compare_rules(df, sub, main, entry_rules, exit_rules)
         print(cmp[["entry_rule", "exit_rule", "n_trades", "total_return", "max_drawdown", "win_rate", "calmar"]].head(8).to_string(index=False))
 
-        # 最佳规则
-        best = cmp.iloc[0]
+        # 最佳交易规则（buy_hold 只是基准，不参与后续逐笔交易明细）
+        best = cmp[cmp["entry_rule"] != "buy_hold"].iloc[0]
         print(f"\n  最佳: {best['entry_rule']} + {best['exit_rule']}")
         print(f"  收益 {best['total_return']}% | 回撤 {best['max_drawdown']}% | 胜率 {best['win_rate']}% | Calmar {best['calmar']}")
 
@@ -174,7 +174,7 @@ def test_basket():
     codes = ai_basket_codes()
     print(f"篮子: {len(codes)} 只股票 ({', '.join(AI_BASKETS.keys())})")
 
-    # 统一用 V2 规则: tian_ma_and_trend + take_profit_or_trend_down
+    # 统一用 V2 规则: tian_ma_trend_state + take_profit_or_trend_down
     results = []
     ok = 0
     fail = 0
@@ -193,7 +193,7 @@ def test_basket():
         main = compute_xhmain(df)
 
         r = simulate(df, sub, main,
-                     entry_rules="tian_ma_and_trend",
+                     entry_rules="tian_ma_trend_state",
                      exit_rules="take_profit_or_trend_down")
 
         bh = benchmark_buy_hold(df)

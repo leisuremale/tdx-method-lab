@@ -1,0 +1,17 @@
+strategy,basket_regime,stocks,stocks_with_trades,trades,weighted_win_rate,positive_stocks,beat_bh_stocks,median_return,median_drawdown,median_calmar,median_vs_bh
+base_combo,basket_bull,124,117,232,65.09,85,35,14.35,-17.18,1.02,-50.63
+no_new_entries_in_down,basket_bull,124,114,227,65.2,83,35,14.11,-17.02,0.95,-51.66
+bull_delay_ma20,basket_bull,124,112,210,58.57,82,37,14.59,-18.09,0.88,-46.38
+bull_delay_ma55,basket_bull,124,108,194,52.58,82,39,15.16,-18.34,0.71,-43.01
+adaptive_ma20_no_down,basket_bull,124,108,205,58.54,81,37,14.11,-17.87,0.69,-45.51
+bull_no_sell_until_ma20,basket_bull,124,112,219,60.27,82,36,13.07,-18.18,0.69,-49.22
+base_combo,basket_neutral,242,231,482,64.52,169,81,9.71,-17.06,0.67,-25.9
+bull_delay_ma55,basket_neutral,242,227,458,62.45,176,86,10.74,-20.77,0.63,-17.29
+bull_delay_ma20,basket_neutral,242,230,475,63.79,172,82,10.06,-18.48,0.62,-20.59
+adaptive_shou_no_down,basket_bull,124,111,222,58.11,81,34,12.88,-18.34,0.6,-50.75
+bull_no_sell_until_ma20,basket_neutral,242,230,483,63.56,169,79,9.66,-18.41,0.59,-22.02
+adaptive_ma55_no_down,basket_bull,124,104,189,52.38,81,39,14.59,-18.34,0.46,-43.35
+adaptive_shou_no_down,basket_neutral,242,192,303,62.38,127,61,0.99,-15.85,0.0,-36.69
+adaptive_ma20_no_down,basket_neutral,242,191,298,59.4,121,60,0.03,-16.18,0.0,-37.35
+no_new_entries_in_down,basket_neutral,242,192,305,59.67,121,57,0.03,-13.76,0.0,-36.91
+adaptive_ma55_no_down,basket_neutral,242,187,286,54.55,118,61,0.0,-17.8,0.0,-35.9

@@ -1,0 +1,4 @@
+strategy,stocks,stocks_with_trades,trades,weighted_win_rate,positive_stocks,beat_bh_stocks,median_return,median_drawdown,median_calmar,median_vs_bh
+candidate_low25_hold20_confirm4,366,348,714,64.71,254,116,11.29,-17.09,0.7,-34.15
+candidate_tianma_hold20_confirm4,366,330,560,68.21,253,119,9.04,-14.92,0.6,-31.96
+control_tianma_fixed20,366,334,584,63.36,231,96,5.02,-12.02,0.38,-39.24

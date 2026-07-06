@@ -1,0 +1,13 @@
+strategy,regime,stocks,stocks_with_trades,trades,weighted_win_rate,positive_stocks,beat_bh_stocks,median_return,median_drawdown,median_calmar,median_vs_bh
+candidate_low25_hold20_confirm4,bull_80pct_plus,131,114,181,75.69,100,2,16.34,-13.57,1.48,-158.39
+candidate_low25_hold20_confirm4,flat_0_to_20pct,45,45,109,66.97,32,23,11.4,-19.53,1.0,2.43
+candidate_tianma_hold20_confirm4,bull_80pct_plus,131,102,139,77.7,89,2,13.47,-12.55,0.92,-166.08
+candidate_low25_hold20_confirm4,up_20_to_80pct,118,117,235,67.66,88,29,14.87,-18.27,0.79,-34.52
+candidate_tianma_hold20_confirm4,flat_0_to_20pct,45,45,86,70.93,35,20,9.55,-14.48,0.74,-1.46
+candidate_tianma_hold20_confirm4,up_20_to_80pct,118,111,184,71.2,90,30,12.32,-16.13,0.72,-34.6
+control_tianma_fixed20,up_20_to_80pct,118,113,197,65.48,82,15,5.88,-12.55,0.61,-35.88
+control_tianma_fixed20,bull_80pct_plus,131,104,140,75.71,83,0,5.37,-7.38,0.61,-176.24
+control_tianma_fixed20,flat_0_to_20pct,45,45,87,60.92,29,16,4.66,-12.08,0.5,-5.4
+candidate_tianma_hold20_confirm4,down_negative,72,72,151,54.3,39,67,2.09,-17.25,0.13,13.95
+control_tianma_fixed20,down_negative,72,72,160,51.25,37,65,0.35,-16.18,0.01,14.4
+candidate_low25_hold20_confirm4,down_negative,72,72,189,49.21,34,62,-1.09,-20.53,-0.04,12.43

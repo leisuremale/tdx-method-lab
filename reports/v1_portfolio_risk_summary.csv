@@ -1,0 +1,5 @@
+total_return,max_drawdown,calmar,n_trades,win_rate,avg_trade_return,stop_mode
+358.61,-18.49,19.39,39,69.23,19.62,none
+379.05,-20.57,18.43,49,55.1,17.65,atr2
+288.88,-19.74,14.64,51,52.94,15.08,fixed_8pct
+254.27,-23.44,10.85,40,65.0,14.93,trail_20pct

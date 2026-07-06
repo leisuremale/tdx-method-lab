@@ -1,0 +1,7 @@
+strategy,stocks,stocks_with_trades,trades,weighted_win_rate,positive_stocks,beat_bh_stocks,median_return,median_drawdown,median_calmar,median_vs_bh
+tianma_hold_20,61,61,253,65.22,53,11,31.91,-19.01,1.78,-200.0
+v1_tianma_exit,61,61,309,46.28,43,11,19.34,-22.72,0.78,-191.6
+macd_zero_hold_10,61,61,851,50.29,38,5,19.42,-31.91,0.58,-184.31
+tianma_hold_10,61,61,299,52.84,39,9,3.95,-16.19,0.3,-221.96
+kdj_any_hold_10,61,61,982,47.66,31,2,4.29,-35.54,0.12,-183.14
+random_same_freq_hold_10,61,61,335,46.57,24,4,-2.57,-21.42,-0.1,-207.87
