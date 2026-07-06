@@ -30,9 +30,9 @@ from tdx_lab.indicators import compute_xhmain, compute_xhsub
 STATE_PATH = LAB / "data" / "paper_state.json"
 LOG_PATH = LAB / "reports" / "paper_log.csv"
 STRATEGY_PATH = LAB / "data" / "paper_strategy.json"
-DEFAULT_STRATEGY = {"name": "V2", "event": "tianma25", "confirm": "ma20", "window": 15,
-                    "min_hold": 20, "exit": "v1_tp_or_td", "exit_confirm_days": 2,
-                    "cooldown": 5}
+DEFAULT_STRATEGY = {"name": "Vfinal-tm21x15-hold30", "kdj_n": 21, "threshold": 15,
+                    "confirm": "none", "window": 0, "hold_bars": 30,
+                    "exit": "fixed_hold", "exit_confirm_days": 1, "cooldown": 5}
 
 
 def tradable_pool() -> list:
@@ -120,30 +120,42 @@ def main() -> int:
                              "strategy": strategy["name"]})
             msg_lines.append(f"- 📤 卖出成交 {name} `{code}` @ {o[-1]} ({ret:+.2f}%)")
 
-        # ── 2) 持仓：退出信号判定（连续确认）──
+        # ── 2) 持仓：退出判定（V-final=固定持有 N 根交易日K线）──
         if code in state["positions"]:
             pos = state["positions"][code]
-            hold_days = int(np.busday_count(pos["entry_date"], last_date))
-            tp = not sub["hold_line"][-1]
-            td = bool(main_["trend_down"][-1])
-            hit = tp or td
-            streak = state["exit_streak"].get(code, 0) + 1 if hit else 0
-            state["exit_streak"][code] = streak
-            if streak >= strategy["exit_confirm_days"] and hold_days >= strategy["min_hold"]:
+            bars_held = int((df["date"] > pos["entry_date"]).sum())
+            if strategy.get("exit") == "fixed_hold":
+                due = bars_held >= strategy["hold_bars"]
+            else:  # 信号退出族（旧V2）
+                hit = (not sub["hold_line"][-1]) or bool(main_["trend_down"][-1])
+                streak = state["exit_streak"].get(code, 0) + 1 if hit else 0
+                state["exit_streak"][code] = streak
+                due = streak >= strategy["exit_confirm_days"] and \
+                    bars_held >= strategy.get("min_hold", 0)
+            if due and code not in state["pending_sells"]:
                 state["pending_sells"][code] = last_date
-                msg_lines.append(f"- 🔔 退出信号确认 {name} `{code}`（明日开盘卖出）")
+                msg_lines.append(f"- 🔔 到期退出 {name} `{code}`（持有{bars_held}根，明日开盘卖出）")
             continue
 
-        # ── 3) 空仓：入场信号 ──
+        # ── 3) 空仓：入场信号（KDJ 周期/阈值按策略配置）──
         if state["cooldown"].get(code, 0) > 0:
             state["cooldown"][code] -= 1
             continue
-        az3, az4 = sub["az3"], sub["az4"]
+        from tdx_lab.indicators import sma_tdx
+        kn = strategy.get("kdj_n", 34)
+        thr = strategy.get("threshold", 25)
+        llv = pd.Series(df["low"].values).rolling(kn).min().values
+        hhv = pd.Series(df["high"].values).rolling(kn).max().values
+        az1 = np.where(hhv != llv, (c - llv) / (hhv - llv) * 100, 50.0)
+        az3 = sma_tdx(sma_tdx(az1, 3, 1), 3, 1)
+        az4 = sma_tdx(az3, 3, 1)
         cross = np.zeros(n, bool)
         cross[1:] = (az3[1:] > az4[1:]) & (az3[:-1] <= az4[:-1])
-        event = cross & (az3 < 25)
-        confirm = c > ma20
-        entry = entry_from_event_confirm(event, confirm, strategy["window"])
+        event = cross & (az3 < thr)
+        if strategy.get("confirm", "none") == "none":
+            entry = event
+        else:
+            entry = entry_from_event_confirm(event, c > ma20, strategy["window"])
         if entry[-1]:
             state["pending_buys"][code] = last_date
             log_rows.append({"date": last_date, "code": code, "name": name, "action": "SIGNAL",

@@ -1,0 +1,14 @@
+{
+  "name": "Vfinal-tm21x15-hold30",
+  "note": "2026-07-06 过加固四关：留出期置换100分位/t2.11/邻域1.0/集中度过。纸面验证≥20事件后方可讨论实盘。",
+  "kdj_n": 21,
+  "threshold": 15,
+  "event": "tianma",
+  "confirm": "none",
+  "window": 0,
+  "hold_bars": 30,
+  "min_hold": 0,
+  "exit": "fixed_hold",
+  "exit_confirm_days": 1,
+  "cooldown": 5
+}
