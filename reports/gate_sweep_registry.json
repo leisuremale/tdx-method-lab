@@ -1,0 +1,59 @@
+{
+  "events": [
+    "tm21_15",
+    "tm21_20",
+    "tm21_25",
+    "tm21_30",
+    "tm34_15",
+    "tm34_20",
+    "tm34_25",
+    "tm34_30",
+    "tm55_15",
+    "tm55_20",
+    "tm55_25",
+    "tm55_30",
+    "trend_up",
+    "var11",
+    "strong_rev",
+    "caopan_x"
+  ],
+  "confirms": [
+    "none",
+    "ma20_w5",
+    "ma20_w10",
+    "ma20_w15",
+    "ma20_w20",
+    "muma_w10",
+    "trendst_w10"
+  ],
+  "exits": [
+    "guanbian_dn",
+    "trend_dn",
+    "v1_tp_or_td",
+    "water_slope",
+    "ndaylow5",
+    "ndaylow10",
+    "ndaylow20",
+    "hold10",
+    "hold20",
+    "hold30",
+    "zhz_break",
+    "giveback"
+  ],
+  "min_holds": [
+    0,
+    10,
+    20
+  ],
+  "filters": [
+    "none",
+    "mkt_ma60",
+    "mkt_ma20"
+  ],
+  "total": 12096,
+  "discovery_end": "2024-12-31",
+  "cost": 0.0013,
+  "confirm_days": 2,
+  "cooldown": 5,
+  "note": "pre-registered wide grid v2; conclusions only from stage2 gates"
+}
